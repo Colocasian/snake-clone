@@ -46,7 +46,7 @@ int main()
         getmaxyx(stdscr, win_max[0], win_max[1]);
         box(stdscr, 0, 0);          /* Draw the screen border */
         ticks++;                    /* Increment game time* */
-        mvprintw(0, 8, "TIME: %ld", (time = ticks/20));
+        mvprintw(0, 8, "TIME: %ld", (time = ticks/14));
         mvprintw(0, win_max[1] - 20, "SCORE: %ld", (score += 1));
 
         /* Things that have to be done if Billy just ate an egg */
