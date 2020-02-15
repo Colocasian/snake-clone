@@ -1,8 +1,10 @@
 #include<ncurses.h>
 #include<unistd.h>
+#include<stdlib.h>
+#include<time.h>
 
 #define DELAY 70000
-#define SIZE 100
+#define SIZE 1000
 
 typedef struct snake{
     int section[SIZE][2];
@@ -18,28 +20,49 @@ int main()
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
     curs_set(FALSE);
+    /* seed our pseudo-random number generator with time, so that numbers generated aren't the same each time */
+    srand(time(NULL));          
 
     /* Initialize some variables */
     int ch;         /* Store keyboard input */
     long unsigned int ticks = 0;
-    int time, max_y, max_x;
-    bool still_alive = TRUE;
-    char direction = 'u';
+    long int time;
+    int win_max[2];
+    int egg_position[2];
+    long int score = -10;
+    bool still_alive = TRUE, egg_eaten = TRUE;
+    char direction = 'r', egg = '@';
 
     /* Initialize our protagonist, Billy the Snake */
     snek billy;
     billy.length = 1;
-    billy.section[0][0] = LINES/2;         /* Center the first section's y-coordinate */
-    billy.section[0][1] = COLS/2;          /* and it's x coordinate as well. */
+    billy.section[0][0] = LINES/4;         /* Center the first section's y-coordinate */
+    billy.section[0][0] *= 2;           /* making sure it's even */
+    billy.section[0][1] = 4;          /* and it's x coordinate as well. */
 
     /* Our main 'game loop' */
     while( ( (ch = getch()) != KEY_F(1) ) && still_alive) {
         clear();
-        getmaxyx(stdscr, max_y, max_x);
+        getmaxyx(stdscr, win_max[0], win_max[1]);
         box(stdscr, 0, 0);          /* Draw the screen border */
         ticks++;                    /* Increment game time* */
-        mvprintw(1, 3, "Time: %d", (time = ticks/10));
-        billy.length = time;
+        mvprintw(0, 8, "TIME: %ld", (time = ticks/20));
+        mvprintw(0, win_max[1] - 20, "SCORE: %ld", (score += 1));
+
+        /* Things that have to be done if Billy just ate an egg */
+        if(egg_eaten) {
+            score += 10;
+            billy.length += 1;
+            egg_position[0] = (rand() % (win_max[0]-4)) + 1;    /* Ensures that we don't put the egg */
+            egg_position[1] = (rand() % (win_max[1]-4)) + 1;    /* in a place inaccessible by Billy */
+            egg_position[0] = (egg_position[0] / 2) * 2;        /* which we do by ensuring it is */
+            egg_position[1] = (egg_position[1] / 2) * 2;        /* divisible by 2 since he moves 2 */
+            egg_eaten = FALSE;                                  /* cells per tick in x axis*/
+        }
+
+        /* Print the egg */
+        mvaddch(egg_position[0], egg_position[1], egg);
+
         /* Display Billy's current position in the map */
         for(int i = 0; i < billy.length; i++) {
             mvaddch(billy.section[i][0], billy.section[i][1], 'O'); 
@@ -72,16 +95,24 @@ int main()
         }
 
         /* Check if Billy crashed into the walls */
-        if(billy.section[0][0] <= 0 || billy.section[0][0] >= max_y || billy.section[0][1] <= 0 || billy.section[0][1] >= max_x)
+        if(billy.section[0][0] <= 0 || billy.section[0][0] >= (win_max[0] - 1) || billy.section[0][1] <= 0 || billy.section[0][1] >= win_max[1])
             still_alive = FALSE;
 
-    /* Check if Billy crashed into himself */
+        /* Check if Billy crashed into himself */
         for(int i = billy.length - 1; i > 0; i--) {
             if(billy.section[i][0] == billy.section[0][0] && billy.section[i][1] == billy.section[0][1])
                 still_alive = FALSE;
         }
+
+        /* Check if Billy ate an egg */
+        if(billy.section[0][0] == egg_position[0] && billy.section[0][1] == egg_position[1])
+            egg_eaten = TRUE;
+
+    /* End of game loop */
     }
-    mvprintw(3, 10, "GAME OVER!");
+    getmaxyx(stdscr, win_max[0], win_max[1]);
+    mvprintw(win_max[0]/2, win_max[1]/2 - 6, "GAME OVER!");
+    refresh();
     sleep(1);
     endwin();
 }
