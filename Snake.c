@@ -1,3 +1,6 @@
+/* A quick snake game written in plain C using the ncurses library
+ * Author: Pratyaksh Gautam
+ * */
 #include<ncurses.h>
 #include<unistd.h>
 #include<stdlib.h>
@@ -25,7 +28,7 @@ int main()
 
     /* Initialize some variables */
     int ch;         /* Store keyboard input */
-    long unsigned int ticks = 0;
+    long unsigned int ticks = 15;
     long int time;
     int win_max[2];
     int egg_position[2];
@@ -45,16 +48,17 @@ int main()
         clear();
         getmaxyx(stdscr, win_max[0], win_max[1]);
         box(stdscr, 0, 0);          /* Draw the screen border */
-        ticks++;                    /* Increment game time* */
+        ticks--;                    /* Decrement game time* */
         mvprintw(0, 8, "TIME: %ld", (time = ticks/14));
-        mvprintw(0, win_max[1] - 20, "SCORE: %ld", (score += 1));
+        mvprintw(0, win_max[1] - 20, "SCORE: %ld", score);
 
         /* Things that have to be done if Billy just ate an egg */
         if(egg_eaten) {
             score += 10;
+	    ticks += 5*14;
             billy.length += 1;
-            egg_position[0] = (rand() % (win_max[0]-4)) + 1;    /* Ensures that we don't put the egg */
-            egg_position[1] = (rand() % (win_max[1]-4)) + 1;    /* in a place inaccessible by Billy */
+            egg_position[0] = (rand() % (win_max[0] - 4)) + 2;    /* Ensures that we don't put the egg */
+            egg_position[1] = (rand() % (win_max[1] - 4)) + 2;    /* in a place inaccessible by Billy */
             egg_position[0] = (egg_position[0] / 2) * 2;        /* which we do by ensuring it is */
             egg_position[1] = (egg_position[1] / 2) * 2;        /* divisible by 2 since he moves 2 */
             egg_eaten = FALSE;                                  /* cells per tick in x axis*/
@@ -104,6 +108,10 @@ int main()
                 still_alive = FALSE;
         }
 
+	/* Check if Billy ran out of time */
+	if(time <= 0)
+	    still_alive = FALSE;
+
         /* Check if Billy ate an egg */
         if(billy.section[0][0] == egg_position[0] && billy.section[0][1] == egg_position[1])
             egg_eaten = TRUE;
@@ -112,7 +120,8 @@ int main()
     }
     getmaxyx(stdscr, win_max[0], win_max[1]);
     mvprintw(win_max[0]/2, win_max[1]/2 - 6, "GAME OVER!");
+    mvprintw(win_max[0]/2 + 1, win_max[1]/2 - 10, "Your score was: %ld", score);
     refresh();
-    sleep(1);
+    sleep(3);
     endwin();
 }
