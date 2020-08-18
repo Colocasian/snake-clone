@@ -99,7 +99,7 @@ int main()
         }
 
         /* Check if Billy crashed into the walls */
-        if(billy.section[0][0] <= 0 || billy.section[0][0] >= (win_max[0] - 1) || billy.section[0][1] <= 0 || billy.section[0][1] >= win_max[1])
+        if(billy.section[0][0] <= 0 || billy.section[0][0] >= (win_max[0] - 1) || billy.section[0][1] <= 0 || billy.section[0][1] >= (win_max[1] - 1))
             still_alive = FALSE;
 
         /* Check if Billy crashed into himself */
